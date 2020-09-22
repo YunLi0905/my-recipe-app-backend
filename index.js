@@ -3,6 +3,20 @@ const app = express()
 
 app.use(express.json())
 
+const requestLogger = (req, res, next) => {
+  console.log("Method: ", req.method)
+  console.log("Path: ", req.path)
+  console.log("Body: ", req.body)
+  console.log("---")
+  next()
+}
+
+app.use(requestLogger)
+
+const unknownEndpoint = (req, res) => {
+  res.status(404).send({ error: "unknown endpoint" })
+}
+
 let recipes = [
   {
     id: 1,
@@ -85,6 +99,7 @@ app.delete("/api/recipes/:id", (req, res) => {
   recipes = recipes.filter((r) => r.id !== id)
   res.status(204).end()
 })
+app.use(unknownEndpoint)
 
 const PORT = 3001
 app.listen(PORT)
