@@ -1,6 +1,10 @@
+require("dotenv").config()
+
 const express = require("express")
 const app = express()
+const Recipe = require("./models/recipe")
 const cors = require("cors")
+const { response } = require("express")
 
 app.use(express.json())
 app.use(cors())
@@ -59,23 +63,10 @@ app.get("/api/recipes", (req, res) => {
 })
 
 app.get("/api/recipes/:id", (request, response) => {
-  const id = Number(request.params.id)
-  const recipe = recipes.find((r) => {
-    return r.id === id
+  Recipe.findById(request.params.id).then((r) => {
+    response.json(r)
   })
-
-  if (recipe) {
-    response.json(recipe)
-  } else {
-    response.status(404).end()
-  }
 })
-
-const generateId = () => {
-  const maxId = recipes.length > 0 ? Math.max(...recipes.map((r) => r.id)) : 0
-
-  return maxId + 1
-}
 
 app.post("/api/recipes", (req, res) => {
   const body = req.body
@@ -86,12 +77,11 @@ app.post("/api/recipes", (req, res) => {
     return res.status(400).json({ error: "name missing" })
   }
 
-  const recipe = {
+  const recipe = new Recipe({
     name: body.name,
     ingredients: body.ingredients,
     method: body.method,
-    id: generateId(),
-  }
+  })
 
   recipes = recipes.concat(recipe)
   res.json(recipes)
