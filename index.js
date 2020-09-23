@@ -5,6 +5,7 @@ const app = express()
 const Recipe = require("./models/recipe")
 const cors = require("cors")
 const { response } = require("express")
+const mongooseUniqueValidator = require("mongoose-unique-validator")
 
 app.use(express.json())
 app.use(cors())
@@ -83,7 +84,10 @@ app.post("/api/recipes", async (req, res) => {
     method: body.method,
   })
 
-  const savedRecipe = await recipe.save()
+  const savedRecipe = await recipe.save().then((result) => {
+    console.log(savedRecipe, " has been saved")
+    mongoose.connection.close()
+  })
   res.json(savedRecipe)
 })
 
