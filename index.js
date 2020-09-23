@@ -5,7 +5,6 @@ const app = express()
 const Recipe = require("./models/recipe")
 const cors = require("cors")
 const { response } = require("express")
-const mongooseUniqueValidator = require("mongoose-unique-validator")
 
 app.use(express.json())
 app.use(cors())
