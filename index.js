@@ -68,7 +68,7 @@ app.get("/api/recipes/:id", (request, response) => {
   })
 })
 
-app.post("/api/recipes", (req, res) => {
+app.post("/api/recipes", async (req, res) => {
   const body = req.body
 
   console.log(body)
@@ -83,8 +83,8 @@ app.post("/api/recipes", (req, res) => {
     method: body.method,
   })
 
-  recipes = recipes.concat(recipe)
-  res.json(recipes)
+  const savedRecipe = await recipe.save()
+  res.json(savedRecipe)
 })
 
 app.delete("/api/recipes/:id", (req, res) => {
