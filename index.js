@@ -84,11 +84,13 @@ app.post("/api/recipes", async (req, res) => {
     method: body.method,
   })
 
-  const savedRecipe = await recipe.save().then((result) => {
-    console.log(savedRecipe, " has been saved")
-    mongoose.connection.close()
-  })
-  res.json(savedRecipe)
+  const savedRecipe = await recipe
+    .save()
+    .then((result) => {
+      console.log(savedRecipe, " has been saved")
+      res.json(savedRecipe.toJSON)
+    })
+    .catch((err) => console.log(err.message))
 })
 
 app.delete("/api/recipes/:id", (req, res) => {
