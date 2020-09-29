@@ -1,14 +1,16 @@
 require("dotenv").config()
+const http = require("http")
 
 const express = require("express")
 const app = express()
+
 const Recipe = require("./models/recipe")
 const cors = require("cors")
 const { response } = require("express")
 
-app.use(express.json())
 app.use(cors())
 app.use(express.static("build"))
+app.use(express.json())
 
 const requestLogger = (req, res, next) => {
   console.log("Method: ", req.method)
@@ -20,52 +22,28 @@ const requestLogger = (req, res, next) => {
 
 app.use(requestLogger)
 
-const unknownEndpoint = (req, res) => {
-  res.status(404).send({ error: "unknown endpoint" })
-}
-
-let recipes = [
-  {
-    id: 1,
-    name: "Gluteeniton omenapiirakka",
-    ingredients: [
-      "Pirkka gluteenitonta vaaleaa jauhoseosta",
-      "sokeri",
-      "sooda",
-      "kanelia",
-    ],
-    method: [
-      "1.Sekoita jauhoseos, sokeri, mantelijauhot ja sooda kulhossa. Sulata voi toisessa kulhossa. Lisää voin joukkoon maito, rahka ja kananmuna. Kaada seos jauhojen joukkoon ja sekoita. Vuoraa vuoka (23 cm × 30 cm) leivinpaperilla ja kaada taikina vuokaan.",
-      "2.Leikkaa omenat ohuiksi siivuiksi. Levitä viipaleet taikinan päälle lomittain vieri viereen. Ripottele päälle sokeria ja kanelia.",
-      "Paista gluteenitonta omenapiirakkaa 200-asteisessa uunissa keskitasolla noin 20-25 minuuttia.",
-    ],
-  },
-  {
-    id: 2,
-    name: "Kantarellipasta",
-    ingredients: ["kantarelleja", " tagliatellea", "sipuli", "valkosipuli"],
-    method: [
-      "1.Keitä pasta pakkauksen ohjeen mukaan runsaassa suolassa maustetussa vedessä (n. 2 tl suolaa/2,5 l vettä).",
-      "2.Puhdista sienet ja leikkaa ne kuutioiksi. (Jätä muutamia pieniä kokonaisia sieniä halutessasi koristeeksi, paista nämä erikseen öljyssä pannulla.) Kuori ja hienonna sipuli ja valkosipuli.",
-      "3.Paista sieniä hetki kuivalla pannulla, kunnes enin neste on haihtunut. Lisää öljy, sipuli ja valkosipuli. Jatka paistamista vielä noin 5 minuuttia, kunnes sipulit ovat pehmenneet ja saaneet hieman väriä.",
-      "4.Kaada kerma pannulle, mausta kastike fondilla ja mustapippurilla. Anna kiehua miedolla lämmöllä pari minuuttia. Lisää lopuksi timjami.",
-      "5.Valuta pasta, säästä 1 dl keitinvettä. Sekoita kastike, parmesaaniraaste ja sopiva määrä pastan keitinvettä pastan joukkoon. Tarjoa heti parmesaaniraasteen kanssa. Koristele annokset paistetuilla kantarelleilla ja tuoreella timjamilla.",
-    ],
-  },
-]
-
 app.get("/", (req, res) => {
   res.send("<h1>Hello world!</h1>")
 })
 
 app.get("/api/recipes", (req, res) => {
-  res.json(recipes)
+  Recipe.find({}).then((recipes) => {
+    res.json(recipes)
+  })
 })
 
-app.get("/api/recipes/:id", (request, response) => {
-  Recipe.findById(request.params.id).then((r) => {
-    response.json(r)
-  })
+app.get("/api/recipes/:id", (request, response, next) => {
+  Recipe.findById(request.params.id)
+    .then((r) => {
+      if (r) {
+        response.json(r)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch((error) => {
+      next(error)
+    })
 })
 
 app.post("/api/recipes", async (req, res) => {
@@ -89,12 +67,45 @@ app.post("/api/recipes", async (req, res) => {
   res.json(savedRecipe.toJSON)
 })
 
-app.delete("/api/recipes/:id", (req, res) => {
-  const id = Number(req.params.id)
-  recipes = recipes.filter((r) => r.id !== id)
-  res.status(204).end()
+app.delete("/api/recipes/:id", (req, res, next) => {
+  Recipe.findByIdAndRemove(req.params.id)
+    .then((result) => {
+      res.status(204).end()
+    })
+    .catch((error) => next(error))
 })
+
+app.put("/api/recipes/:id", (request, response, next) => {
+  const body = request.body
+
+  const recipe = {
+    content: body.content,
+    important: body.important,
+  }
+
+  Recipe.findByIdAndUpdate(request.params.id, note, { new: true })
+    .then((updatedRecipe) => {
+      response.json(updatedRecipe)
+    })
+    .catch((error) => next(error))
+})
+
+const unknownEndpoint = (req, res) => {
+  res.status(404).send({ error: "unknown endpoint" })
+}
 app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" })
+  }
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {

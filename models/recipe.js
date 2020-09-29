@@ -9,7 +9,7 @@ const url = process.env.MONGODB_URL
 
 mongoose
   .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then((result) => {
+  .then(() => {
     console.log("connected to MongoDB")
   })
   .catch((err) => {
@@ -31,6 +31,7 @@ const RecipeSchema = new mongoose.Schema({
     required: true,
   },
 })
+
 RecipeSchema.plugin(uniqueValidator)
 
 RecipeSchema.set("toJSON", {
