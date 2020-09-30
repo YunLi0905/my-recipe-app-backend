@@ -5,17 +5,6 @@ const uniqueValidator = require("mongoose-unique-validator")
 mongoose.set("useFindAndModify", false)
 mongoose.set("useCreateIndex", true)
 
-const url = process.env.MONGODB_URL
-
-mongoose
-  .connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    console.log("connected to MongoDB")
-  })
-  .catch((err) => {
-    console.log("error connecting to MongoDB", err.message)
-  })
-
 const RecipeSchema = new mongoose.Schema({
   name: {
     type: String,
