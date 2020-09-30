@@ -39,7 +39,8 @@ recipesRouter.post("/", async (req, res) => {
   const savedRecipe = await recipe.save()
 
   console.log(savedRecipe, " has been saved")
-  res.json(savedRecipe.toJSON)
+
+  res.status(201).json(savedRecipe)
 })
 
 recipesRouter.delete("/:id", (req, res, next) => {
